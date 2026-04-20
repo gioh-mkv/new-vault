@@ -15,21 +15,20 @@ A ideia central e simples: **tudo em um so lugar, sem depender de apps externos*
 ## Estrutura de pastas
 
 ```
-MeuCofre/
-|
-|-- Home.md                        <- homepage principal
-|-- DailyNotes/                    <- notas diarias (YYYY-MM-DD.md)
-|-- _Templates/                    <- templates do Templater
-|   |-- Nota Diaria.md
-|   |-- Evento Universidade.md
-|   |-- Disciplina.md
-|   |-- Projeto.md
-|   |-- Freelance.md
-|   |-- Concurso.md
-|   |-- Curso.md
-|   |-- Estudo Independente.md
-|   `-- Area de Conhecimento.md
-|-- _Attachments/                  <- imagens e arquivos anexados
+|   MeuCofre/
+|    |--Home.md                        <- homepage principal
+|    |--DailyNotes/                    <- notas diarias (YYYY-MM-DD.md)
+|    |--_Templates/                    <- templates do Templater
+|    |  |-- Nota Diaria.md
+|    |  |-- Evento Universidade.md
+|    |  |-- Disciplina.md
+|    |  |-- Projeto.md
+|    |  |-- Freelance.md
+|    |  |-- Concurso.md
+|    |  |-- Curso.md
+|    |  |-- Estudo Independente.md
+|    |  `-- Area de Conhecimento.md
+|    |--_Attachments/                  <- imagens e arquivos anexados
 |
 |-- Pessoal/
 |   |-- _Home Pessoal.md
@@ -37,12 +36,15 @@ MeuCofre/
 |   |   |-- Leitura em andamento/
 |   |   |-- Leituras concluidas/
 |   |   `-- Lista de desejos/
-|   `-- frases.json                <- nao necessario (frases embutidas no codigo)
-|
-|-- Saude/
-|   |-- _Home Saude.md
-|   |-- pesagem.json               <- registros de peso de duas pessoas
-|   `-- academia.json              <- nao necessario (lido das notas diarias)
+|   |-- Saude/
+|   |   |-- _Home Saude.md
+|   |   |-- pesagem.json               <- registros de peso de duas pessoas
+|   |   `-- academia.json              <- nao necessario (lido das notas diarias)
+|   |-- Financas/
+|       |-- _Home Financas.md
+|       |-- transacoes.json            <- todas as transacoes financeiras
+|       |-- metas.json                 <- limites mensais por categoria
+|       `-- anotacoes.json             <- bloco de notas de financas
 |
 |-- Universidade/
 |   |-- _Home Universidade.md
@@ -59,12 +61,6 @@ MeuCofre/
 |   |-- Cursos Profissionalizantes/
 |   |-- Estudos Independentes/
 |   `-- Areas de Conhecimento/
-|
-|-- Financas/
-|   |-- _Home Financas.md
-|   |-- transacoes.json            <- todas as transacoes financeiras
-|   |-- metas.json                 <- limites mensais por categoria
-|   `-- anotacoes.json             <- bloco de notas de financas
 |
 |-- Projetos/
 |   |-- _Home Projetos.md
