@@ -15,7 +15,7 @@ A ideia central e simples: **tudo em um so lugar, sem depender de apps externos*
 ## Estrutura de pastas
 
 ```
-|   MeuCofre/
+|-- MeuCofre/
 |    |--Home.md                        <- homepage principal
 |    |--DailyNotes/                    <- notas diarias (YYYY-MM-DD.md)
 |    |--_Templates/                    <- templates do Templater
