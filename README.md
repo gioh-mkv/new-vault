@@ -39,12 +39,10 @@ MeuCofre/
 |   |   |-- Leitura em andamento/
 |   |   |-- Leituras concluidas/
 |   |   `-- Lista de desejos/
-|   `-- frases.json                <- nao necessario (frases embutidas no codigo)
 |
 |-- Saude/
 |   |-- _Home Saude.md
 |   |-- pesagem.json               <- registros de peso de duas pessoas
-|   `-- academia.json              <- nao necessario (lido das notas diarias)
 |
 |-- Universidade/
 |   |-- _Home Universidade.md
