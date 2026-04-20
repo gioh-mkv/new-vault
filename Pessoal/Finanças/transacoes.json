@@ -1,0 +1,30 @@
+[
+  {
+    "data": "2026-04-19",
+    "descricao": "salario",
+    "tipo": "receita",
+    "categoria": "Alimentação",
+    "valor": 6000
+  },
+  {
+    "data": "2026-04-19",
+    "descricao": "energia",
+    "tipo": "despesa",
+    "categoria": "Contas",
+    "valor": 200
+  },
+  {
+    "data": "2026-04-19",
+    "descricao": "mercado",
+    "tipo": "despesa",
+    "categoria": "Alimentação",
+    "valor": 500
+  },
+  {
+    "data": "2026-03-11",
+    "descricao": "conta de março",
+    "tipo": "despesa",
+    "categoria": "Alimentação",
+    "valor": 300
+  }
+]

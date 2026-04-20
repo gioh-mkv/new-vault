@@ -1,5 +1,3 @@
-# new-vault
-
 # Guia do Cofre -- Documentacao e Configuracao
 
 > Este arquivo serve como referencia central do seu cofre no Obsidian. Leia com calma antes de comecar a usar -- vai poupar muito tempo.
@@ -39,10 +37,12 @@ MeuCofre/
 |   |   |-- Leitura em andamento/
 |   |   |-- Leituras concluidas/
 |   |   `-- Lista de desejos/
+|   `-- frases.json                <- nao necessario (frases embutidas no codigo)
 |
 |-- Saude/
 |   |-- _Home Saude.md
 |   |-- pesagem.json               <- registros de peso de duas pessoas
+|   `-- academia.json              <- nao necessario (lido das notas diarias)
 |
 |-- Universidade/
 |   |-- _Home Universidade.md
