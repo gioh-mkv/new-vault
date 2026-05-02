@@ -1,7 +1,3 @@
----
-## tags: [homepage, financas] cssclasses: [home-page]
----
-
 ```dataviewjs
 // ============================================================
 //  HOME FINANÇAS — DataviewJS
@@ -21,18 +17,48 @@ const MESES_ABREV = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out"
 function ilink(path) { return `data-href="${path}" href="${path}" class="internal-link"`; }
 function brl(v) { return "R$ " + Number(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
+function atualizarCategorias(selectCat, tipoSelecionado, categoriaAtual = null) {
+  selectCat.innerHTML = "";
+  const lista = CATEGORIAS[tipoSelecionado] || [];
+
+  for (const cat of lista) {
+    const opt = selectCat.createEl("option", {
+      text: cat,
+      attr: { value: cat }
+    });
+
+    if (cat === categoriaAtual) opt.selected = true;
+  }
+}
+
 // ---------- CAMINHOS ----------
-const PATH_TX    = "01. Pessoal/Finanças/transacoes.json";
-const PATH_METAS = "01. Pessoal/Finanças/metas.json";
-const PATH_NOTAS = "01. Pessoal/Finanças/anotacoes.json";
+const PATH_TX    = "00. Vault/_Data/transacoes.json";
+const PATH_METAS = "00. Vault/_Data/metas.json";
+const PATH_NOTAS = "00. Vault/_Data/anotacoes.json";
 
 // ---------- CATEGORIAS ----------
-const CATEGORIAS = ["Alimentação","Moradia","Transporte","Saúde","Educação","Lazer","Vestuário","Assinaturas","Investimentos","Salário","Freelance","Outros"];
-const COR_CAT = {
-  "Alimentação":"#E24B4A","Moradia":"#185FA5","Transporte":"#854F0B",
-  "Saúde":"#0F6E56","Educação":"#534AB7","Lazer":"#993556",
-  "Vestuário":"#D4537E","Assinaturas":"#5F5E5A","Investimentos":"#3B6D11",
-  "Salário":"#1D9E75","Freelance":"#378ADD","Outros":"#888780",
+const CATEGORIAS = {
+  despesa: ["Alimentação","Moradia","Transporte","Saúde","Cartão de Crédito","Lazer","Vestuário","Contas","Outros"],
+  
+  receita: ["Salário","Freelance","Investimentos","Bolsa Estágio","Empréstimo", "Outras"]
+};
+const COR_CAT = {"Cartão de Crédito":"#FF0000",
+"Moradia":"#FF0091",
+"Alimentação":"#FF00CF",
+"Transporte":"#00FF8C",
+"Saúde":"#FF9900",
+"Lazer":"##FFDE00",
+"Vestuário":"#DBFF00",
+"Contas":"#96FF00",
+"Investimentos":"#00FF0A",
+"Outros":"#868585",
+  
+"Salário":"#00FFD9",
+"Bolsa Estágio":"#00E8FF", 
+"Freelance":"#00C9FF", 
+"Investimentos":"#0047FF", 
+"Empréstimo":"#8000FF",
+"Outras":"#9600FF" 
 };
 
 // ---------- LEITURA ----------
@@ -70,6 +96,13 @@ function porCategoria(lista) {
   }
   return Object.entries(map).sort((a,b)=>b[1]-a[1]);
 }
+function porCategoriaReceita(lista) {
+  const map = {};
+  for (const t of lista.filter(t=>t.tipo==="receita")) {
+    const c=t.categoria||"Outros"; map[c]=(map[c]||0)+(t.valor||0);
+  }
+  return Object.entries(map).sort((a,b)=>b[1]-a[1]);
+}
 
 const anosDisponiveis = [...new Set([anoAtual,...transacoes.map(t=>new Date(t.data+"T00:00:00").getFullYear())])].sort((a,b)=>b-a);
 
@@ -87,24 +120,28 @@ async function salvarAnotacoes(texto) {
 }
 
 // ---------- GRÁFICO PIZZA ----------
-function graficoPizza(cats) {
+function graficoPizza(cats, label = "Gastos", corFallback = null) {
   if (!cats.length) return "";
   const total=cats.reduce((s,[,v])=>s+v,0);
   if (!total) return "";
   const R=60,CX=75,CY=75;
   let svg=`<svg width="150" height="150" viewBox="0 0 150 150">`;
   let ang=-Math.PI/2;
+  // Paleta de cores para receitas (tonalidades de verde/azul)
+  const COR_RECEITA = {
+    "Salário":"#00FFD9","Bolsa Estágio":"#00E8FF", "Freelance":"#00C9FF", "Investimentos":"#0047FF", "Empréstimo":"#8000FF", "Outras":"#9600FF"
+  };
   cats.slice(0,6).forEach(([cat,val])=>{
     const frac=val/total,sweep=frac*2*Math.PI;
     const x1=CX+R*Math.cos(ang),y1=CY+R*Math.sin(ang);
     ang+=sweep;
     const x2=CX+R*Math.cos(ang),y2=CY+R*Math.sin(ang);
     const large=sweep>Math.PI?1:0;
-    const cor=COR_CAT[cat]||"#888";
+    const cor = corFallback ? (COR_RECEITA[cat]||"#888") : (COR_CAT[cat]||"#888");
     svg+=`<path d="M${CX},${CY} L${x1.toFixed(2)},${y1.toFixed(2)} A${R},${R} 0 ${large} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z" fill="${cor}" stroke="var(--background-primary)" stroke-width="1.5"/>`;
   });
   svg+=`<circle cx="${CX}" cy="${CY}" r="32" fill="var(--background-primary)"/>`;
-  svg+=`<text x="${CX}" y="${CY-6}" text-anchor="middle" style="font-size:9px;fill:var(--text-faint);font-family:var(--font-interface);">Gastos</text>`;
+  svg+=`<text x="${CX}" y="${CY-6}" text-anchor="middle" style="font-size:9px;fill:var(--text-faint);font-family:var(--font-interface);">${label}</text>`;
   svg+=`<text x="${CX}" y="${CY+8}" text-anchor="middle" style="font-size:9px;font-weight:600;fill:var(--text-normal);font-family:var(--font-interface);">${brl(total).replace("R$ ","")}</text>`;
   return svg+`</svg>`;
 }
@@ -141,6 +178,7 @@ function renderMensal(painel, mes, ano) {
   const despesas = somaDespesas(tx);
   const saldoMes = receitas - despesas;
   const cats     = porCategoria(tx);
+  const catsReceita = porCategoriaReceita(tx);
 
   // Limpa painel
   painel.innerHTML = "";
@@ -180,19 +218,49 @@ function renderMensal(painel, mes, ano) {
   }
 
   // ── Pizza ─────────────────────────────────────────────────────
-  if (cats.length > 0) {
-    const totalCats = cats.reduce((s,[,v])=>s+v,0);
-    painel.createEl("p",{text:"Gastos por categoria",attr:{style:"font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px;"}});
-    const pizzaWrap = painel.createEl("div",{attr:{style:"display:flex;gap:20px;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;"}});
-    pizzaWrap.innerHTML += graficoPizza(cats);
-    const legenda = pizzaWrap.createEl("div",{attr:{style:"flex:1;min-width:160px;"}});
-    for (const [cat,val] of cats) {
-      const pct=totalCats>0?Math.round((val/totalCats)*100):0;
-      const row=legenda.createEl("div",{attr:{style:"display:flex;align-items:center;gap:8px;margin-bottom:6px;"}});
-      row.createEl("div",{attr:{style:`width:8px;height:8px;border-radius:50%;background:${COR_CAT[cat]||'#888'};flex-shrink:0;`}});
-      row.createEl("span",{text:cat,attr:{style:"font-size:12px;color:var(--text-normal);flex:1;"}});
-      row.createEl("span",{text:`${pct}%`,attr:{style:"font-size:11px;color:var(--text-faint);"}});
-      row.createEl("span",{text:brl(val),attr:{style:"font-size:12px;font-weight:500;color:var(--text-normal);"}});
+  const temDespesas = cats.length > 0;
+  const temReceitas = catsReceita.length > 0;
+
+  if (temDespesas || temReceitas) {
+    const pizzasContainer = painel.createEl("div", {attr:{style:"display:flex;gap:32px;margin-bottom:20px;flex-wrap:wrap;"}});
+
+    // -- Pizza de Despesas --
+    if (temDespesas) {
+      const totalCats = cats.reduce((s,[,v])=>s+v,0);
+      const bloco = pizzasContainer.createEl("div", {attr:{style:"flex:1;min-width:260px;"}});
+      bloco.createEl("p",{text:"Gastos por categoria",attr:{style:"font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px;"}});
+      const pizzaWrap = bloco.createEl("div",{attr:{style:"display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;"}});
+      pizzaWrap.innerHTML += graficoPizza(cats, "Gastos");
+      const legenda = pizzaWrap.createEl("div",{attr:{style:"flex:1;min-width:140px;"}});
+      for (const [cat,val] of cats) {
+        const pct=totalCats>0?Math.round((val/totalCats)*100):0;
+        const row=legenda.createEl("div",{attr:{style:"display:flex;align-items:center;gap:8px;margin-bottom:6px;"}});
+        row.createEl("div",{attr:{style:`width:8px;height:8px;border-radius:50%;background:${COR_CAT[cat]||'#888'};flex-shrink:0;`}});
+        row.createEl("span",{text:cat,attr:{style:"font-size:12px;color:var(--text-normal);flex:1;"}});
+        row.createEl("span",{text:`${pct}%`,attr:{style:"font-size:11px;color:var(--text-faint);"}});
+        row.createEl("span",{text:brl(val),attr:{style:"font-size:12px;font-weight:500;color:var(--text-normal);"}});
+      }
+    }
+
+    // -- Pizza de Receitas --
+    if (temReceitas) {
+      const COR_RECEITA = {
+        "Salário":"#00FFD9","Bolsa Estágio":"#00E8FF", "Freelance":"#00C9FF", "Investimentos":"#0047FF", "Empréstimo":"#8000FF", "Outras":"#9600FF"
+      };
+      const totalRec = catsReceita.reduce((s,[,v])=>s+v,0);
+      const bloco = pizzasContainer.createEl("div", {attr:{style:"flex:1;min-width:260px;"}});
+      bloco.createEl("p",{text:"Receitas por categoria",attr:{style:"font-size:11px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px;"}});
+      const pizzaWrap = bloco.createEl("div",{attr:{style:"display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;"}});
+      pizzaWrap.innerHTML += graficoPizza(catsReceita, "Receitas", true);
+      const legenda = pizzaWrap.createEl("div",{attr:{style:"flex:1;min-width:140px;"}});
+      for (const [cat,val] of catsReceita) {
+        const pct=totalRec>0?Math.round((val/totalRec)*100):0;
+        const row=legenda.createEl("div",{attr:{style:"display:flex;align-items:center;gap:8px;margin-bottom:6px;"}});
+        row.createEl("div",{attr:{style:`width:8px;height:8px;border-radius:50%;background:${COR_RECEITA[cat]||'#888'};flex-shrink:0;`}});
+        row.createEl("span",{text:cat,attr:{style:"font-size:12px;color:var(--text-normal);flex:1;"}});
+        row.createEl("span",{text:`${pct}%`,attr:{style:"font-size:11px;color:var(--text-faint);"}});
+        row.createEl("span",{text:brl(val),attr:{style:"font-size:12px;font-weight:500;color:var(--text-normal);"}});
+      }
     }
   }
 
@@ -245,9 +313,26 @@ function renderMensal(painel, mes, ano) {
       row.style.gridTemplateColumns = "1fr";
       row.style.padding = "10px 14px";
 
-      const editGrid = row.createEl("div",{attr:{style:"display:grid;grid-template-columns:120px 1fr 110px 140px 110px auto;gap:8px;align-items:end;"}});
+      const editGrid = row.createEl("div", {
+  attr: {
+    style: `
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+    `
+  }
+});
 
-      const fStyle = "width:100%;padding:5px 8px;border-radius:6px;border:1px solid var(--background-modifier-border);background:var(--background-primary);color:var(--text-normal);font-size:12px;";
+      const fStyle = `
+  padding:6px 8px;
+  border-radius:6px;
+  border:1px solid var(--background-modifier-border);
+  background:var(--background-primary);
+  color:var(--text-normal);
+  font-size:12px;
+  min-width:90px;
+`;
 
       const eData = editGrid.createEl("input",{attr:{type:"date",value:t.data||"",style:fStyle}});
       const eDesc = editGrid.createEl("input",{attr:{type:"text",value:t.descricao||"",style:fStyle}});
@@ -258,25 +343,49 @@ function renderMensal(painel, mes, ano) {
       eTipo.value = t.tipo||"despesa";
 
       const eCat = editGrid.createEl("select",{attr:{style:fStyle}});
-      for (const c of CATEGORIAS) { const o=eCat.createEl("option",{text:c,attr:{value:c}}); if(c===t.categoria)o.selected=true; }
 
-      const eVal = editGrid.createEl("input",{attr:{type:"number",step:"0.01",value:t.valor||"",style:fStyle}});
+// popula corretamente baseado no tipo
+atualizarCategorias(eCat, eTipo.value, t.categoria);
 
-      const eBtns = editGrid.createEl("div",{attr:{style:"display:flex;gap:4px;"}});
+// atualiza quando trocar tipo
+eTipo.addEventListener("change", () => {
+  atualizarCategorias(eCat, eTipo.value);
+});
+
+      const eVal = editGrid.createEl("input", {
+  attr: {
+    type: "text",
+    value: (t.valor ?? "").toString().replace(".", ","),
+    placeholder: "Valor",
+    style: fStyle + "width:100px;"
+  }
+});
+
+      const eBtns = editGrid.createEl("div", {
+  attr:{style:"display:flex;gap:6px;margin-left:auto;"}
+});
       const btnOk  = eBtns.createEl("button",{text:"✓",attr:{style:"padding:5px 9px;border:none;border-radius:6px;background:var(--interactive-accent);color:var(--text-on-accent);font-size:13px;cursor:pointer;font-weight:700;"}});
       const btnCancel = eBtns.createEl("button",{text:"✕",attr:{style:"padding:5px 9px;border:1px solid var(--background-modifier-border);border-radius:6px;background:var(--background-secondary);color:var(--text-muted);font-size:13px;cursor:pointer;"}});
 
       btnCancel.addEventListener("click", () => renderMensal(painel, mes, ano));
 
       btnOk.addEventListener("click", async () => {
-        const novoValor = parseFloat(eVal.value);
+        const novoValor = parseFloat(
+  eVal.value.replace(",", ".")
+);
         if (!eData.value||!eDesc.value.trim()||isNaN(novoValor)||novoValor<=0) return;
         const novas = transacoes.map(x => {
           if (x._idx !== t._idx) return x;
           return { ...x, data:eData.value, descricao:eDesc.value.trim(), tipo:eTipo.value, categoria:eCat.value, valor:parseFloat(novoValor.toFixed(2)) };
         });
         await salvarTransacoes(novas);
-        dv.index.touch(app.vault.getAbstractFileByPath(dv.currentFilePath));
+        // 🔥 RECARREGA DO ARQUIVO (ESSENCIAL)  
+transacoes = JSON.parse(await app.vault.adapter.read(PATH_TX))  
+.map((t, i) => ({ ...t, _idx: i }))  
+.sort((a, b) => new Date(b.data) - new Date(a.data));  
+  
+// 🔄 RE-RENDERIZA A TELA  
+renderMensal(painel, mes, ano);
       });
     });
   }
@@ -509,7 +618,11 @@ selTipo.createEl("option",{text:"Receita",attr:{value:"receita"}});
 
 const c4=fGrid.createEl("div"); c4.createEl("label",{text:"Categoria",attr:{style:lS}});
 const selCat=c4.createEl("select",{attr:{style:fS}});
-for (const cat of CATEGORIAS) selCat.createEl("option",{text:cat,attr:{value:cat}});
+atualizarCategorias(selCat, selTipo.value);
+
+selTipo.addEventListener("change", () => {
+  atualizarCategorias(selCat, selTipo.value);
+});
 
 const c5=fGrid.createEl("div"); c5.createEl("label",{text:"Valor (R$)",attr:{style:lS}});
 const inputValor=c5.createEl("input",{attr:{type:"number",step:"0.01",min:"0",placeholder:"0,00",style:fS}});
@@ -517,6 +630,8 @@ const inputValor=c5.createEl("input",{attr:{type:"number",step:"0.01",min:"0",pl
 const fFooter = sepForm.createEl("div",{attr:{style:"display:flex;align-items:center;gap:12px;margin-top:12px;"}});
 const fbk      = fFooter.createEl("span",{attr:{style:"font-size:12px;color:var(--text-faint);flex:1;"}});
 const btnSalvar = fFooter.createEl("button",{text:"Salvar transação",attr:{style:"background:var(--interactive-accent);color:var(--text-on-accent);border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;"}});
+
+
 
 btnSalvar.addEventListener("click",async()=>{
   const data=inputData.value.trim(),desc=inputDesc.value.trim(),tipo=selTipo.value,cat=selCat.value,vRaw=inputValor.value.trim();
@@ -538,33 +653,30 @@ btnSalvar.addEventListener("click",async()=>{
     setTimeout(()=>dv.index.touch(app.vault.getAbstractFileByPath(dv.currentFilePath)),1500);
   } catch(err){fbk.textContent=`Erro: ${err.message}`;fbk.style.color="var(--text-error)";btnSalvar.disabled=false;}
 });
-
 // ================================================================
 //  BLOCO DE ANOTAÇÕES
 // ================================================================
-const sepNotas = root.createEl("div",{attr:{style:"margin-top:28px;border-top:1px solid var(--background-modifier-border);padding-top:20px;"}});
-sepNotas.createEl("p",{text:"Anotações",attr:{style:"font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint);margin:0 0 10px;"}});
-
-const textarea = sepNotas.createEl("textarea",{
-  attr:{
-    placeholder:"Use este espaço para anotações, lembretes financeiros, metas de longo prazo...",
-    style:"width:100%;min-height:120px;padding:12px;border-radius:10px;border:1px solid var(--background-modifier-border);background:var(--background-secondary);color:var(--text-normal);font-size:13px;font-family:var(--font-interface);line-height:1.6;resize:vertical;box-sizing:border-box;"
-  }
+const divNotas = root.createEl("div", {
+    attr: { style: "margin-top: 30px; border-top: 1px solid var(--background-modifier-border); padding-top: 20px;" }
 });
-textarea.value = anotacoes;
 
-const notasFooter = sepNotas.createEl("div",{attr:{style:"display:flex;align-items:center;gap:10px;margin-top:8px;"}});
-const notasFbk    = notasFooter.createEl("span",{attr:{style:"font-size:12px;color:var(--text-faint);flex:1;"}});
-const btnSalvarNotas = notasFooter.createEl("button",{text:"Salvar anotações",attr:{style:"padding:7px 16px;border:1px solid var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);color:var(--text-normal);font-size:12px;font-weight:600;cursor:pointer;"}});
+divNotas.createEl("p", {
+    text: "Bloco de Anotações",
+    attr: { style: "font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--text-faint); margin:0 0 10px;" }
+});
 
-btnSalvarNotas.addEventListener("click",async()=>{
-  try {
-    await salvarAnotacoes(textarea.value);
-    notasFbk.textContent="✓ Salvo!"; notasFbk.style.color="#1D9E75";
-    setTimeout(()=>{notasFbk.textContent="";},2000);
-  } catch(err) {
-    notasFbk.textContent=`Erro: ${err.message}`; notasFbk.style.color="var(--text-error)";
-  }
+const areaTexto = divNotas.createEl("textarea", {
+    text: anotacoes,
+    attr: { 
+        style: "width: 100%; min-height: 120px; padding: 12px; border-radius: 8px; border: 1px solid var(--background-modifier-border); background: var(--background-primary); color: var(--text-normal); font-family: var(--font-interface); font-size: 13px; resize: vertical;",
+        placeholder: "Digite suas observações financeiras aqui..."
+    }
+});
+
+// Salva automaticamente ao sair do campo (blur)
+areaTexto.addEventListener("blur", async () => {
+    await salvarAnotacoes(areaTexto.value);
+    new Notice("Anotações salvas!");
 });
 ```
 
